@@ -1,0 +1,127 @@
+---
+title: "hw6_cs498"
+author: "Kewei Zhou"
+date: "10/16/2018"
+output: html_document
+---
+```{r include=FALSE}
+#just read in the data
+library(data.table)
+data <- fread('https://archive.ics.uci.edu/ml/machine-learning-databases/housing/housing.data')
+data
+```
+__a__
+```{r}
+#381,369
+reg<- lm(data$V14~.,data = data)
+lev = hat(model.matrix(reg))
+names(lev)= 1:length(lev)
+plot(lev)
+text(x=1:length(lev)+1, y=lev, labels=ifelse(lev>0.1, names(lev),""), col="red")
+which(lev==max(lev))
+      
+#after see the plot the point of #381 has leverage value larger than 0.2
+#cook distance
+cooksd <- cooks.distance(reg)
+plot(cooksd)
+text(x=1:length(cooksd)+1, y=cooksd-0.005, labels=ifelse(cooksd>4/nrow(data), names(cooksd),""), col="red",font = 2,cex=0.8)
+
+
+plot(reg$fitted.values,rstandard(reg),main='Stdresidue v.s fitted value')
+curve(x-x,-5,50, add = TRUE,col='red')
+
+
+```
+```{r}
+plot(data$V14,reg$fitted.values)
+curve(x^1,0,50,add= TRUE)
+par(mfrow=c(2,2))
+
+plot(reg)
+#372,369 373 365
+```
+__b__
+```{r}
+#remvoe those suspecious points
+rm_list <-c(369)
+data_new <- data[-rm_list,]
+reg_new<- lm(data_new$V14~.,data = data_new)
+
+lev = hat(model.matrix(reg_new))
+names(lev)= 1:length(lev)
+plot(lev)
+text(x=1:length(lev)+1, y=lev, labels=ifelse(lev>0.1, names(lev),""), col="red")
+which(lev==max(lev))
+
+cooksd <- cooks.distance(reg_new)
+plot(cooksd)
+
+text(x=1:length(cooksd)+1, y=cooksd-0.005, labels=ifelse(cooksd>4/nrow(data_new), names(cooksd),""), col="red",font = 2,cex=0.8)
+```
+```{r}
+#in the newdata 366 372 365 368 with largest cook distance(which is 366 373 365 368in the original set)
+#which(data$V13==data_new$V13[368])
+rm_list <-c(366,372,365,368)
+data_new <- data_new[-rm_list,]
+reg_new<- lm(data_new$V14~.,data = data_new)
+
+
+cooksd <- cooks.distance(reg_new)
+plot(cooksd)
+text(x=1:length(cooksd)+1, y=cooksd-0.005, labels=ifelse(cooksd>4/nrow(data_new), names(cooksd),""), col="red",font = 2,cex=0.8)
+```
+
+```{r}
+par(mfrow=c(2,2))
+
+plot(reg_new)
+
+```
+The points I remvoed 366 373 365 368 369
+
+__c__
+This time we see the distribution of the dependent varibale,
+```{r}
+qqnorm(data_new$V14)
+qqline(data_new$V14,col= "red")
+
+
+```  
+According to the QQ plot , it seems that there are more obs on the right side which means it is left sknewness. SO here I to perform iterative Shapiro-Wilk tests, and finds the lambda value that maximizes the W statistic from those tests. 
+```{r}
+
+library(MASS)
+set.seed(1)
+bc<- boxcox(data_new$V14~.,data = data_new)#so the optimal lambda should between 0 to 0.3
+```
+```{r}
+bc<- boxcox(data_new$V14~.,data = data_new,lambda= seq(0,0.2,0.01))
+best_lambda<-bc$x[ which(bc$y==max(bc$y))]#lambda we choose 
+m_t <- lm(((data_new$V14^best_lambda-1)/best_lambda)~.,data = data_new)
+plot(m_t)
+ 
+
+```
+```{r}
+
+pred_t<- predict(m_t,data_new[,1:13])
+pred_tb<- (best_lambda*pred_t+1)^(1/best_lambda)
+
+
+```
+
+```{r}
+
+plot(x= data_new$V14,y=pred_tb,main  ='True house value V.S fitted value',ylab = 'fitted value',xlab='True house value') 
+curve(x^1,0,50, add = TRUE,col='red')
+
+
+```
+
+```{r}
+res<- data_new$V14-  pred_tb
+std_res<- (res-mean(res))/sd(res)
+plot(pred_tb,std_res,main='Stdresidue v.s fitted value',xlab= 'fitted value',ylab = 'Standardize residue ')
+curve(x-x,-5,50, add = TRUE)
+
+```
