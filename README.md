@@ -8,4 +8,6 @@
 ### 6.Generilized Linear Model
 ### 7.Mean filed inference (Boltzmann machine)
 ### 8.CNN with tensorflow and tensorboard
-### Variational autoencoder
+### 9.Variational autoencoder
+### 10.Recommendation System
+
