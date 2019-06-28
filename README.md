@@ -11,3 +11,4 @@
 ### 9.Variational autoencoder
 ### 10.Recommendation System
 ### 11.AutoEncoder
+### 12.GAN
