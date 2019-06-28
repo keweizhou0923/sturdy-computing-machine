@@ -8,7 +8,7 @@ output: html_document
 #just read in the data
 library(data.table)
 data <- fread('https://archive.ics.uci.edu/ml/machine-learning-databases/housing/housing.data')
-data
+data 
 ```
 __a__
 ```{r}
