@@ -1,4 +1,4 @@
-# Apply machine learning.
+# Apply machine learning & Deep learning
 ## Related course topics include
 ### 1.svm
 ### 2.EM
